@@ -74,6 +74,14 @@ class Medicine extends Model
     }
 
     /**
+     * Get stock opname items for this medicine
+     */
+    public function stockOpnameItems(): HasMany
+    {
+        return $this->hasMany(StockOpnameItem::class);
+    }
+
+    /**
      * Get total stock from all batches
      */
     public function getTotalStockAttribute(): int
