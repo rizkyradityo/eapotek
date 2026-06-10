@@ -6,6 +6,8 @@ use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\StockOpnameController;
+use App\Http\Controllers\StockCardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -63,6 +65,23 @@ Route::middleware(['auth'])->group(function () {
         // Export routes
         Route::get('/export/sales', [ReportController::class, 'exportSales'])->name('reports.export.sales');
         Route::get('/export/stock', [ReportController::class, 'exportStock'])->name('reports.export.stock');
+    });
+
+    // Stock Opname
+    Route::prefix('stock-opname')->group(function () {
+        Route::get('/', [StockOpnameController::class, 'index'])->name('stock-opname.index');
+        Route::get('/create', [StockOpnameController::class, 'create'])->name('stock-opname.create');
+        Route::post('/', [StockOpnameController::class, 'store'])->name('stock-opname.store');
+        Route::get('/{id}', [StockOpnameController::class, 'show'])->name('stock-opname.show');
+        Route::post('/{id}/update-item', [StockOpnameController::class, 'updateItem'])->name('stock-opname.update-item');
+        Route::post('/{id}/apply', [StockOpnameController::class, 'apply'])->name('stock-opname.apply');
+        Route::post('/{id}/cancel', [StockOpnameController::class, 'cancel'])->name('stock-opname.cancel');
+    });
+
+    // Stock Card (Kartu Stok)
+    Route::prefix('stock-card')->group(function () {
+        Route::get('/', [StockCardController::class, 'index'])->name('stock-card.index');
+        Route::get('/{medicineId}', [StockCardController::class, 'show'])->name('stock-card.show');
     });
 
     // API Routes (for AJAX calls)

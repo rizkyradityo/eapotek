@@ -84,26 +84,76 @@
                         @php
                             $navItems = [
                                 ['route' => 'dashboard', 'label' => 'Dashboard', 'pattern' => 'dashboard'],
-                                ['route' => 'pos', 'label' => 'POS', 'pattern' => 'pos'],
-                                ['route' => 'medicines.index', 'label' => 'Obat', 'pattern' => 'medicines.*'],
-                                ['route' => 'suppliers.index', 'label' => 'Supplier', 'pattern' => 'suppliers.*'],
-                                ['route' => 'purchases.index', 'label' => 'Pembelian', 'pattern' => 'purchases.*'],
+                                ['route' => 'pos', 'label' => 'POS', 'pattern' => 'pos*'],
+                                [
+                                    'label' => 'Master',
+                                    'icon' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>',
+                                    'pattern' => 'medicines.*|suppliers.*',
+                                    'children' => [
+                                        ['route' => 'medicines.index', 'label' => 'Obat', 'pattern' => 'medicines.*'],
+                                        ['route' => 'suppliers.index', 'label' => 'Supplier', 'pattern' => 'suppliers.*'],
+                                    ]
+                                ],
+                                [
+                                    'label' => 'Inventori',
+                                    'icon' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>',
+                                    'pattern' => 'purchases.*|stock-opname.*|stock-card.*',
+                                    'children' => [
+                                        ['route' => 'purchases.index', 'label' => 'Pembelian', 'pattern' => 'purchases.*'],
+                                        ['route' => 'stock-opname.index', 'label' => 'Stok Opname', 'pattern' => 'stock-opname.*'],
+                                        ['route' => 'stock-card.index', 'label' => 'Kartu Stok', 'pattern' => 'stock-card.*'],
+                                    ]
+                                ],
                                 ['route' => 'transactions.index', 'label' => 'Transaksi', 'pattern' => 'transactions.*'],
                                 ['route' => 'reports.sales', 'label' => 'Laporan', 'pattern' => 'reports.*'],
                             ];
                         @endphp
 
                         @foreach($navItems as $item)
-                            @php
-                                $isActive = request()->routeIs($item['pattern']);
-                            @endphp
-                            <a href="{{ route($item['route']) }}" 
-                               class="px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 ease-in-out relative group {{ $isActive ? 'text-primary-700 bg-primary-50/80 shadow-sm' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100' }}">
-                                {{ $item['label'] }}
-                                @if($isActive)
-                                    <span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-1 bg-primary-500 rounded-t-full"></span>
-                                @endif
-                            </a>
+                            @if(isset($item['children']))
+                                @php
+                                    $isActive = request()->routeIs(explode('|', $item['pattern']));
+                                @endphp
+                                <div x-data="{ open: false }" class="relative" @mouseenter="open = true" @mouseleave="open = false">
+                                    <button class="flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 ease-in-out {{ $isActive ? 'text-primary-700 bg-primary-50/80 shadow-sm' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100' }}">
+                                        {!! $item['icon'] !!}
+                                        {{ $item['label'] }}
+                                        <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
+                                    </button>
+                                    <div x-show="open" x-cloak
+                                        @click.away="open = false"
+                                        class="absolute top-full left-0 mt-1 w-56 bg-white rounded-xl shadow-lg border border-slate-200 py-2 z-50"
+                                        x-transition:enter="transition ease-out duration-150"
+                                        x-transition:enter-start="transform opacity-0 scale-95"
+                                        x-transition:enter-end="transform opacity-100 scale-100"
+                                        x-transition:leave="transition ease-in duration-100"
+                                        x-transition:leave-start="transform opacity-100 scale-100"
+                                        x-transition:leave-end="transform opacity-0 scale-95">
+                                        @foreach($item['children'] as $child)
+                                            @php
+                                                $childActive = request()->routeIs($child['pattern']);
+                                            @endphp
+                                            <a href="{{ route($child['route']) }}"
+                                               class="flex items-center px-4 py-2.5 text-sm {{ $childActive ? 'text-primary-700 bg-primary-50 font-semibold' : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50' }}">
+                                                {{ $child['label'] }}
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @else
+                                @php
+                                    $isActive = request()->routeIs($item['pattern']);
+                                @endphp
+                                <a href="{{ route($item['route']) }}" 
+                                   class="px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 ease-in-out relative group {{ $isActive ? 'text-primary-700 bg-primary-50/80 shadow-sm' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100' }}">
+                                    {{ $item['label'] }}
+                                    @if($isActive)
+                                        <span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-1 bg-primary-500 rounded-t-full"></span>
+                                    @endif
+                                </a>
+                            @endif
                         @endforeach
                     </div>
                     @endauth
@@ -232,5 +282,7 @@
     
     <!-- Alpine.js for interactive elements -->
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+    @stack('scripts')
 </body>
 </html>
