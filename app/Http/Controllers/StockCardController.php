@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Medicine;
+use App\Models\Purchase;
+use App\Models\Sale;
 use App\Models\StockMovement;
 use Illuminate\Http\Request;
 
@@ -34,27 +36,26 @@ class StockCardController extends Controller
 
         $query = StockMovement::with('user')
             ->where('medicine_id', $medicineId)
+            ->whereIn('reference_type', ['purchase', 'sale'])
             ->when($fromDate, fn($q, $d) => $q->whereDate('created_at', '>=', $d))
             ->when($toDate, fn($q, $d) => $q->whereDate('created_at', '<=', $d));
 
-        $stockIn = (clone $query)->where('type', 'in')->sum('quantity');
-        $stockOut = (clone $query)->where('type', 'out')->sum('quantity');
+        $stockIn = (clone $query)->where('reference_type', 'purchase')->sum('quantity');
+        $stockOut = (clone $query)->where('reference_type', 'sale')->sum('quantity');
 
-        $movements = $query->orderBy('created_at')->paginate(50);
+        $movements = $query->orderBy('created_at', 'desc')->paginate(20);
 
         $totalStock = $medicine->total_stock;
 
-        $batches = $medicine->batches()
-            ->where('quantity', '>', 0)
-            ->orWhere(function ($q) {
-                $q->where('is_active', true);
-            })
-            ->orderBy('expired_date')
-            ->get();
+        $purchaseIds = $movements->where('reference_type', 'purchase')->pluck('reference_id')->unique();
+        $saleIds = $movements->where('reference_type', 'sale')->pluck('reference_id')->unique();
+
+        $purchases = Purchase::with('supplier')->whereIn('id', $purchaseIds)->get()->keyBy('id');
+        $sales = Sale::whereIn('id', $saleIds)->get()->keyBy('id');
 
         return view('stock-card.show', compact(
             'medicine', 'movements', 'stockIn', 'stockOut',
-            'totalStock', 'batches', 'fromDate', 'toDate'
+            'totalStock', 'fromDate', 'toDate', 'purchases', 'sales'
         ));
     }
 }

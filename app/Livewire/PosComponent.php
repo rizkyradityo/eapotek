@@ -109,12 +109,46 @@ class PosComponent extends Component
         unset($this->cart[$key]);
     }
 
+    public function incrementQuantity($key)
+    {
+        if (!isset($this->cart[$key])) return;
+
+        $item = $this->cart[$key];
+        $batch = MedicineBatch::find($item['batch_id']);
+        $newQty = (int) $item['quantity'] + 1;
+
+        if ($batch && $newQty > $batch->quantity) {
+            session()->flash('error', 'Stok tidak mencukupi');
+            return;
+        }
+
+        $this->cart[$key]['quantity'] = $newQty;
+    }
+
+    public function decrementQuantity($key)
+    {
+        if (!isset($this->cart[$key])) return;
+
+        $newQty = (int) $this->cart[$key]['quantity'] - 1;
+
+        if ($newQty < 1) {
+            $this->removeFromCart($key);
+            return;
+        }
+
+        $this->cart[$key]['quantity'] = $newQty;
+    }
+
     public function updateQuantity($key, $quantity)
     {
+        $quantity = (int) $quantity;
+
         if ($quantity < 1) {
             $this->removeFromCart($key);
             return;
         }
+
+        if (!isset($this->cart[$key])) return;
 
         $item = $this->cart[$key];
         $batch = MedicineBatch::find($item['batch_id']);
