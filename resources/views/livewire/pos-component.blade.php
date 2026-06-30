@@ -109,7 +109,7 @@
             @else
                 <div class="space-y-2">
                     @foreach($cart as $key => $item)
-                        <div class="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm flex flex-col gap-2 hover:border-primary-200 transition-colors">
+                        <div wire:key="{{ $key }}" class="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm flex flex-col gap-2 hover:border-primary-200 transition-colors">
                             <div class="flex justify-between items-start">
                                 <div class="font-bold text-slate-800 text-sm leading-tight pr-2">{{ $item['medicine_name'] }}</div>
                                 <button wire:click="removeFromCart('{{ $key }}')" class="text-slate-300 hover:text-red-500 transition-colors p-1 bg-slate-50 hover:bg-red-50 rounded-lg">
@@ -118,17 +118,17 @@
                                     </svg>
                                 </button>
                             </div>
-                            
+
                             <div class="flex items-center justify-between mt-1">
                                 <div class="flex items-center gap-2 bg-slate-50 p-1 rounded-xl border border-slate-100">
-                                    <button class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-primary-600 hover:bg-white rounded-lg transition-colors font-bold shadow-sm" wire:click="updateQuantity('{{ $key }}', {{ is_array($item['quantity']) ? current($item['quantity']) : $item['quantity'] }} - 1)">-</button>
-                                    <input type="number" min="1" value="{{ is_array($item['quantity']) ? current($item['quantity']) : $item['quantity'] }}" wire:change="updateQuantity('{{ $key }}', $event.target.value)" class="w-8 text-center text-sm font-bold text-slate-700 bg-transparent border-none p-0 focus:ring-0">
-                                    <button class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-primary-600 hover:bg-white rounded-lg transition-colors font-bold shadow-sm" wire:click="updateQuantity('{{ $key }}', {{ is_array($item['quantity']) ? current($item['quantity']) : $item['quantity'] }} + 1)">+</button>
+                                    <button class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-primary-600 hover:bg-white rounded-lg transition-colors font-bold shadow-sm" wire:click="decrementQuantity('{{ $key }}')">-</button>
+                                    <input type="number" min="1" value="{{ $item['quantity'] }}" wire:change="updateQuantity('{{ $key }}', $event.target.value)" class="w-8 text-center text-sm font-bold text-slate-700 bg-transparent border-none p-0 focus:ring-0">
+                                    <button class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-primary-600 hover:bg-white rounded-lg transition-colors font-bold shadow-sm" wire:click="incrementQuantity('{{ $key }}')">+</button>
                                 </div>
                                 <div class="text-right">
                                     <div class="text-[10px] text-slate-400 mb-0.5">@ Rp {{ number_format($item['unit_price'], 0, ',', '.') }}</div>
                                     <div class="font-bold text-primary-600 text-sm">
-                                        Rp {{ number_format($item['unit_price'] * (is_array($item['quantity']) ? current($item['quantity']) : $item['quantity']), 0, ',', '.') }}
+                                        Rp {{ number_format($item['unit_price'] * $item['quantity'], 0, ',', '.') }}
                                     </div>
                                 </div>
                             </div>
