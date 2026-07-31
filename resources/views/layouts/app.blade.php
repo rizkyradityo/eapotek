@@ -61,7 +61,7 @@
 <body class="bg-slate-50 text-slate-800 font-sans antialiased selection:bg-primary-500 selection:text-white min-h-screen flex flex-col">
     <div id="app" class="flex-grow flex flex-col">
         <!-- Navigation -->
-        <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-slate-200/60 shadow-sm transition-all duration-300">
+        <nav x-data="{ mobileOpen: false }" class="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-slate-200/60 shadow-sm transition-all duration-300">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between items-center h-20">
                     <!-- Logo -->
@@ -80,9 +80,8 @@
 
                     <!-- Navigation Links -->
                     @auth
-                    <div class="hidden md:flex items-center space-x-1">
-                        @php
-                            $navItems = [
+                    @php
+                        $navItems = [
                                 ['route' => 'dashboard', 'label' => 'Dashboard', 'pattern' => 'dashboard'],
                                 ['route' => 'pos', 'label' => 'POS', 'pattern' => 'pos*'],
                                 [
@@ -109,6 +108,8 @@
                             ];
                         @endphp
 
+                    <div class="flex items-center">
+                        <div class="hidden md:flex items-center space-x-1">
                         @foreach($navItems as $item)
                             @if(isset($item['children']))
                                 @php
@@ -155,6 +156,19 @@
                                 </a>
                             @endif
                         @endforeach
+                        </div>
+
+                        <!-- Mobile Menu Toggle -->
+                        <button @click="mobileOpen = !mobileOpen"
+                                class="md:hidden p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-all duration-200"
+                                aria-label="Toggle menu" :aria-expanded="mobileOpen">
+                            <svg x-show="!mobileOpen" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                            <svg x-show="mobileOpen" x-cloak xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
                     </div>
                     @endauth
 
@@ -191,6 +205,61 @@
                         @endauth
                     </div>
                 </div>
+
+                @auth
+                <!-- Mobile Navigation Panel -->
+                <div x-show="mobileOpen" x-cloak
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 -translate-y-2"
+                     x-transition:enter-end="opacity-100 translate-y-0"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100 translate-y-0"
+                     x-transition:leave-end="opacity-0 -translate-y-2"
+                     class="md:hidden pb-4 pt-2 border-t border-slate-200/60">
+                    <div class="flex flex-col space-y-1">
+                        @foreach($navItems as $item)
+                            @if(isset($item['children']))
+                                @php
+                                    $isActive = request()->routeIs(explode('|', $item['pattern']));
+                                @endphp
+                                <div x-data="{ open: {{ $isActive ? 'true' : 'false' }} }">
+                                    <button @click="open = !open"
+                                            class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 {{ $isActive ? 'text-primary-700 bg-primary-50/80' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100' }}">
+                                        <span class="flex items-center gap-1.5">
+                                            {!! $item['icon'] !!}
+                                            {{ $item['label'] }}
+                                        </span>
+                                        <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
+                                    </button>
+                                    <div x-show="open" x-cloak class="pl-8 flex flex-col space-y-1 mt-1">
+                                        @foreach($item['children'] as $child)
+                                            @php
+                                                $childActive = request()->routeIs($child['pattern']);
+                                            @endphp
+                                            <a href="{{ route($child['route']) }}"
+                                               @click="mobileOpen = false"
+                                               class="px-4 py-2 rounded-lg text-sm {{ $childActive ? 'text-primary-700 bg-primary-50 font-semibold' : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50' }}">
+                                                {{ $child['label'] }}
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @else
+                                @php
+                                    $isActive = request()->routeIs($item['pattern']);
+                                @endphp
+                                <a href="{{ route($item['route']) }}"
+                                   @click="mobileOpen = false"
+                                   class="px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 {{ $isActive ? 'text-primary-700 bg-primary-50/80' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100' }}">
+                                    {{ $item['label'] }}
+                                </a>
+                            @endif
+                        @endforeach
+                    </div>
+                </div>
+                @endauth
             </div>
         </nav>
 
